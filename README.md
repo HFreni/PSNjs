@@ -1,8 +1,8 @@
 # PSNjs — PSN Client and Server (with optional OSC routing)
 
-![npm](https://img.shields.io/npm/v/psnjs?logo=npm&color=cb3837)
-![downloads](https://img.shields.io/npm/dm/psnjs?logo=npm)
-![node](https://img.shields.io/node/v/psnjs)
+![npm](https://img.shields.io/npm/v/@harrisonfreni/psnjs?logo=npm&color=cb3837)
+![downloads](https://img.shields.io/npm/dm/@harrisonfreni/psnjs?logo=npm)
+![node](https://img.shields.io/node/v/@harrisonfreni/psnjs)
 ![license](https://img.shields.io/badge/license-MIT-blue.svg)
 ![code style: prettier](https://img.shields.io/badge/code_style-Prettier-ff69b4.svg?logo=prettier)
 ![ci](https://github.com/hfreni/psnjs/actions/workflows/ci.yml/badge.svg)
@@ -29,7 +29,7 @@ npm run build
 ### Install from npm (recommended)
 
 ```bash
-npm install psnjs
+npm install @harrisonfreni/psnjs
 ```
 
 ### Native dependency note (PSN capture only)
@@ -240,7 +240,7 @@ npm run build
 npm link   # in this repo
 
 # in your consuming project
-npm link psnjs
+npm link @harrisonfreni/psnjs
 ```
 
 - Pack and install from a tarball:
@@ -280,7 +280,7 @@ Project links
 
 - Repository: https://github.com/REPLACE_ME_ORG/REPLACE_ME_REPO
 - Issues: https://github.com/REPLACE_ME_ORG/REPLACE_ME_REPO/issues
-- npm package: https://www.npmjs.com/package/psnjs
+- npm package: https://www.npmjs.com/package/@harrisonfreni/psnjs
 
 Note: Replace `REPLACE_ME_ORG/REPLACE_ME_REPO` with your GitHub org/repo once finalized.
 

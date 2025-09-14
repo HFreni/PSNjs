@@ -57,7 +57,10 @@ jobs:
           mkdir -p /tmp/smoke-cjs && cd /tmp/smoke-cjs
           npm init -y --silent
           npm install --ignore-scripts --silent "$GITHUB_WORKSPACE/${PKG_TGZ}"
-          node -e "const m=require('psnjs'); if(!m.PSNClient) { console.error('PSNClient missing'); process.exit(1);} console.log('CJS OK')"
+          ls -la node_modules || true
+          ls -la node_modules/@harrisonfreni || true
+          node -e "console.log('pkg name:', require('./node_modules/@harrisonfreni/psnjs/package.json').name)"
+          node -e "const m=require('./node_modules/@harrisonfreni/psnjs'); if(!m.PSNClient) { console.error('PSNClient missing'); process.exit(1);} console.log('CJS OK')"
           node ./node_modules/.bin/psnjs --help || true
 
       - name: Test install (ESM)
@@ -65,4 +68,4 @@ jobs:
           mkdir -p /tmp/smoke-esm && cd /tmp/smoke-esm
           npm init -y --silent
           npm install --ignore-scripts --silent "$GITHUB_WORKSPACE/${PKG_TGZ}"
-          node -e "import('psnjs').then(m=>{ if(!m.PSNClient){ throw new Error('PSNClient missing'); } console.log('ESM OK')}).catch(e=>{ console.error(e); process.exit(1); })"
+          node -e "import('./node_modules/@harrisonfreni/psnjs').then(m=>{ if(!m.PSNClient){ throw new Error('PSNClient missing'); } console.log('ESM OK')}).catch(e=>{ console.error(e); process.exit(1); })"
