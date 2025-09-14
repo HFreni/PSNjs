@@ -30,7 +30,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies (skip native install scripts)
-        run: npm ci --ignore-scripts
+        run: npm install --ignore-scripts
 
       - name: Build CJS and ESM bundles
         run: npm run -s build
