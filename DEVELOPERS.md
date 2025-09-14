@@ -1,10 +1,10 @@
-PSNjs Developer Notes
+# PSNjs Developer Notes
 
-Overview
+## Overview
 
 This codebase listens for PosiStageNet (PSN) multicast and can also transmit PSN. It optionally routes parsed axes to OSC/TCP.
 
-Modules at a glance
+## Modules at a glance
 
 - src/utils.ts — PSN pch32 helpers, chunk IDs, and shared types
 - src/psnClient.ts — Packet capture + PSN INFO/DATA parsers, emits events
@@ -15,7 +15,7 @@ Modules at a glance
 - src/index-listener.ts — Minimal console listener
 - src/mcast-*.js — Multicast test helpers (receive/send)
 
-CLI (src/cli.ts)
+## CLI (src/cli.ts)
 
 - Subcommands:
   - `listen` (default): start PSN listener with optional OSC routing
@@ -23,12 +23,12 @@ CLI (src/cli.ts)
 - Flags: `--config`, `--iface`, `--ttl`, `--osc*`, `--debug`, `--flatten`
 - Config is merged: CLI > JSON (if provided) > env defaults
 
-Config (src/config.ts)
+## Config (src/config.ts)
 
 - Types and utilities to load/merge a JSON config and CLI/env into a single AppConfig.
 - JSON shape mirrors the fields used by the listener and OSC router.
 
-PSN packet format (pch32)
+## PSN packet format (pch32)
 
 - Each packet is a tree of “pch32” chunks. A chunk header is 4 bytes (two little‑endian 16‑bit words):
   - word A: (hasSub << 15) | id (15 bits)
@@ -38,7 +38,7 @@ PSN packet format (pch32)
   - 0x6756 → INFO_PACKET
   - 0x6755 → DATA_PACKET
 
-INFO packet structure
+### INFO packet structure
 
 - Root: 0x6756 (INFO_PACKET)
 - Subchunks of root:
@@ -51,7 +51,7 @@ INFO packet structure
       - Or include subchunks:
         - 0x0000 → INFO.TRACKER_NAME (UTF‑8 string)
 
-DATA packet structure
+### DATA packet structure
 
 - Root: 0x6755 (DATA_PACKET)
 - Subchunks of root:
@@ -68,7 +68,7 @@ DATA packet structure
         - 0x0005 → TRGTPOS    → float32 x3 (x,y,z)
         - 0x0006 → TIMESTAMP  → uint64 (tracker timestamp)
 
-Header layout (INFO.HEADER / DATA.HEADER payload)
+### Header layout (INFO.HEADER / DATA.HEADER payload)
 
 - 0..7   → uint64 LE timestamp
 - 8      → uint8  version.high
@@ -76,13 +76,13 @@ Header layout (INFO.HEADER / DATA.HEADER payload)
 - 10     → uint8  frameId
 - 11     → uint8  packets
 
-Parsing resilience
+### Parsing resilience
 
 - Endianness: All chunk headers are read with LE 16‑bit words; we accommodate hasSub on either word.
 - Bounds checks: All loops guard against truncated or oversized chunks.
 - Flattened mode: Some emitters do not provide per‑tracker wrappers. Set `PSN_FLATTEN=1` to parse a linear subchunk stream, where each POS starts a tracker.
 
-OSC routing
+## OSC routing
 
 - Config via env or CLI flags (see README). Defaults:
   - Position: `/psn/{id}/x|y|z`
@@ -92,13 +92,13 @@ OSC routing
 - `{id}` placeholder → tracker id (from DATA wrapper or POS ordering in flatten mode)
 - `{name}` placeholder → tracker name from INFO when available; falls back to `{id}`
 
-Debugging
+## Debugging
 
 - `PSN_DEBUG=1` → logs root/subchunk ids and lengths as they parse
 - `PSN_FLATTEN=1` → enables flattened DATA mode
 - `npm run mcast:listen` / `npm run mcast:send` → quick multicast checks
 
-Code organization notes
+## Code organization notes
 
 - `src/utils.ts`: pch32 helpers, chunk ids, and typed interfaces
 - `src/psnClient.ts`: capture and parsing logic with INFO/DATA walkers
@@ -108,7 +108,7 @@ Code organization notes
 - `src/index.ts`: main entrypoint with optional OSC routing
 - `src/index-listener.ts`: minimal listener for debugging
 
-PSN client API (src/psnClient.ts)
+## PSN client API (src/psnClient.ts)
 
 - Class: `PSNClient extends EventEmitter`
   - Events:
@@ -153,7 +153,7 @@ client.on('data', (data) => {
 client.start(process.env.IFACE);
 ```
 
-PSN server API (src/psnServer.ts)
+## PSN server API (src/psnServer.ts)
 
 - Class: `PSNServer extends EventEmitter`
   - Methods:
@@ -173,7 +173,7 @@ PSN server API (src/psnServer.ts)
     server.start(/* ifaceIp? */ undefined, /* ttl? */ 1);
     ```
 
-OSCRouter API (src/oscRouter.ts)
+## OSCRouter API (src/oscRouter.ts)
 
 - Class: `OSCRouter`
   - Ctor config: `{ host, port, addresses: { pos, speed?, ori?, accel? } }`
@@ -209,27 +209,27 @@ Notes:
 - `{name}` resolves from PSN INFO; falls back to `{id}` if unknown.
 - To send only position, either omit `speed/ori/accel` in `addresses`, or set env `OSC_ONLY_POS=1` when using the CLI.
 
-OSCTcpClient API (src/osc.ts)
+## OSCTcpClient API (src/osc.ts)
 
 - Functions: `encodeOSCMessage(address, args)`
 - Class: `OSCTcpClient(host, port)` with `send(address, args)` and `close()`
 
-Type definitions (src/utils.ts)
+## Type definitions (src/utils.ts)
 
 - `PSNHeader`, `TrackerInfo`, `TrackerData`, `InfoPayload`, `DataPayload`
 - `CHUNK` constants for root/INFO/DATA IDs
 
-Entrypoints
+## Entrypoints
 
 - `src/index.ts`: lists NICs, starts PSNClient, logs INFO/DATA, optional OSC routing
 - `src/index-listener.ts`: lean listener printing tracker names + fields
 
-Test helpers
+## Test helpers
 
 - `src/mcast-test.js`: join PSN multicast and print payloads
 - `src/mcast-send.js`: send a test UDP packet to the PSN group
 
-Contributing
+## Contributing
 
 - Keep parsing changes bounded with strict length checks.
 - When encountering a new variant, prefer additive tolerance in the reader (e.g., accept flat name payloads) and document it inline.

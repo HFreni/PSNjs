@@ -1,45 +1,63 @@
-PSNjs — PSN Client and Server (with optional OSC routing)
+# PSNjs — PSN Client and Server (with optional OSC routing)
+
+![npm](https://img.shields.io/npm/v/psnjs?logo=npm&color=cb3837)
+![downloads](https://img.shields.io/npm/dm/psnjs?logo=npm)
+![node](https://img.shields.io/node/v/psnjs)
+![license](https://img.shields.io/badge/license-MIT-blue.svg)
+![code style: prettier](https://img.shields.io/badge/code_style-Prettier-ff69b4.svg?logo=prettier)
+![ci](https://github.com/hfreni/psnjs/actions/workflows/ci.yml/badge.svg)
+
+<p align="center">
+  <img src="./PSNjs.png" alt="PSNjs Logo" width="280" />
+  <br/>
+</p>
 
 PSNjs is a small TypeScript toolkit for PosiStageNet (PSN):
 - PSN Client: capture and parse INFO/DATA from the PSN multicast group.
 - PSN Server: simulate a PSN source and transmit INFO/DATA.
 - Optional OSC Routing: forward PSN axes to user‑defined OSC/TCP addresses.
 
-Install / Build
+## Install / Build
 
 - From source for local development:
 
-  npm install
-  npm run build
-
-Install from npm (recommended)
-
-```
-npm install @harrisonfreni/psnjs
+```bash
+npm install
+npm run build
 ```
 
-Native dependency note (PSN capture only):
+### Install from npm (recommended)
+
+```bash
+npm install psnjs
+```
+
+### Native dependency note (PSN capture only)
 
 - If you plan to use PSNClient (packet capture), the optional native module `cap` requires libpcap/WinPcap/Npcap and a compiler toolchain for your OS.
 - If you only use OSC routing and not PSN capture, you can ignore the native dependency.
 
-Quick start
+## Quick start
 
 - Listen to PSN on an interface (auto if omitted):
 
-  npm run listen -- [IFACE]
+```bash
+npm run listen -- [IFACE]
+```
 
 - Main listener with optional OSC (see below for flags/env):
 
-  npm run dev -- [IFACE] [TTL]
+```bash
+npm run dev -- [IFACE] [TTL]
+```
 
 - Simulate PSN (sender) programmatically: see `src/psnServer.ts` or the example in DEVELOPERS.md.
 
-Send PSN (simulation)
+## Send PSN (simulation)
 
 - Start a simple PSN sender that advertises one tracker (ID=1, name "SimTracker") and animates X from 0→1000 mm over ~30s:
 
-```
+```bash
 npm run send:sim -- [IFACE] [TTL]
 # or
 npx ts-node src/psnTx.ts 192.168.1.223 1
@@ -48,7 +66,7 @@ npx ts-node src/psnTx.ts 192.168.1.223 1
 - The sender multicasts to `236.10.10.10:56565` and logs each DATA frame.
 - CI-safe: set `PSN_DRYRUN=1` or pass `--dry-run` to avoid binding sockets (logs only).
 
-OSC routing (optional)
+## OSC routing (optional)
 
 Enable routing via environment variables or CLI flags when running `src/index.ts`:
 
@@ -72,7 +90,7 @@ Placeholders supported in addresses:
 
 Example usage (ts-node):
 
-```
+```bash
 OSC_ENABLE_TCP=1 \
 OSC_HOST=127.0.0.1 \
 OSC_PORT=9000 \
@@ -87,7 +105,7 @@ npx ts-node src/index.ts 192.168.1.223
 
 NPM script example:
 
-```
+```bash
 npm run osc -- [IFACE] [TTL]
 ```
 
@@ -100,7 +118,7 @@ Notes
   - `PSN_FLATTEN=1` treats DATA tracker list as a linear stream (each POS starts a tracker).
   - `OSC_ONLY_POS=1` disables speed/orientation/accel OSC messages.
 
-CLI flags (override env)
+### CLI flags (override env)
 
 - `--osc` enable OSC routing
 - `--osc-host <host>`
@@ -112,25 +130,25 @@ CLI flags (override env)
 
 Example:
 
-```
+```bash
 npx ts-node src/index.ts 192.168.1.223 --osc --osc-host 127.0.0.1 --osc-port 9000 --osc-addr-x /rig/{id}/x
 ```
 
-Integration test
+## Integration test
 
 - Run a local OSC TCP integration test that spins a server and sends three messages:
 
-```
+```bash
 npm run test-osc
 ```
 
 If a port permission error appears, try a different port via `OSC_PORT` or run outside restricted environments.
 
-Multicast test helpers
+## Multicast test helpers
 
 - Receive PSN multicast and print raw payloads:
 
-```
+```bash
 node src/mcast-test.js [IFACE]
 # or
 IFACE=192.168.1.223 node src/mcast-test.js
@@ -138,7 +156,7 @@ IFACE=192.168.1.223 node src/mcast-test.js
 
 - Send a test message to the PSN multicast group:
 
-```
+```bash
 node src/mcast-send.js [IFACE] [TTL]
 # or
 IFACE=192.168.1.223 TTL=1 node src/mcast-send.js
@@ -148,7 +166,7 @@ Notes:
 - `IFACE` is optional; when omitted, the OS default route is used.
 - The PSN multicast address `236.10.10.10` and port `56565` are per PSN spec.
 
-Architecture
+## Architecture
 
 - PSNClient: Captures PSN multicast and parses INFO/DATA into typed payloads.
 - OSCRouter: Maps tracker axes to OSC addresses with `{id}`/`{name}` placeholders.
@@ -159,13 +177,13 @@ Architecture
 
 See DEVELOPERS.md for deeper protocol notes and parser details.
 
-Configuration
+## Configuration
 
 - JSON config (optional): create `psn.config.json` in your project and pass `--config` to the CLI.
 
 Example `psn.config.json`:
 
-```
+```json
 {
   "iface": "192.168.1.223",
   "ttl": 1,
@@ -181,11 +199,11 @@ Example `psn.config.json`:
 }
 ```
 
-CLI (minimal)
+## CLI (minimal)
 
 Install (local dev): build and run via ts-node or use the CLI entry after building.
 
-```
+```bash
 npm run build
 npx node dist/cli.js listen --config psn.config.json
 
@@ -194,11 +212,11 @@ psnjs listen --config psn.config.json
 psnjs send-sim --iface 192.168.1.223 --ttl 1
 ```
 
-Library usage (integrate into another Node project)
+## Library usage (integrate into another Node project)
 
 Add this repo as a dependency (e.g., file:../psnjs or git URL). Then:
 
-```
+```ts
 import { PSNClient, OSCRouter } from 'psnjs';
 
 const client = new PSNClient();
@@ -213,11 +231,11 @@ client.on('data', d => router.routeData(d));
 client.start(process.env.IFACE);
 ```
 
-Publish / Link
+## Publish / Link
 
 - Local link for development:
 
-```
+```bash
 npm run build
 npm link   # in this repo
 
@@ -227,7 +245,7 @@ npm link psnjs
 
 - Pack and install from a tarball:
 
-```
+```bash
 npm run build
 npm pack                   # produces psnjs-<version>.tgz
 npm install ./psnjs-*.tgz  # in your consuming project
@@ -241,12 +259,30 @@ npm install ./psnjs-*.tgz  # in your consuming project
   - `import` → `dist/esm/lib.mjs` (ESM)
   - `types` → `dist/lib.d.ts`
 
-Release to npm
+## Release to npm
 
-- Update version: `npm version <patch|minor|major>`
-- Ensure README/DEVELOPERS are up to date
-- Publish: `npm publish` (add `--access public` if using a scoped public package)
-- Tag and push your release commit
+1) Update version: `npm version <patch|minor|major>`
+2) Ensure README/DEVELOPERS are up to date
+3) Publish: `npm publish` (add `--access public` if using a scoped public package)
+4) Tag and push your release commit
+
+### Publish via GitHub Actions
+
+- Create an npm token and add it as a repository secret named `NPM_TOKEN`.
+  - https://www.npmjs.com/settings/<your-username>/tokens
+  - GitHub: Settings → Secrets and variables → Actions → New repository secret
+- Push a tag like `v1.2.3` or create a GitHub Release — the workflow will build and publish.
+- You can also trigger manually via the “Publish” workflow’s “Run workflow” button.
+
+## Project links
+ 
+Project links
+
+- Repository: https://github.com/REPLACE_ME_ORG/REPLACE_ME_REPO
+- Issues: https://github.com/REPLACE_ME_ORG/REPLACE_ME_REPO/issues
+- npm package: https://www.npmjs.com/package/psnjs
+
+Note: Replace `REPLACE_ME_ORG/REPLACE_ME_REPO` with your GitHub org/repo once finalized.
 
 **Data Flow**
 
