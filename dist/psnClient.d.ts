@@ -8,6 +8,9 @@ export declare class PSNClient extends EventEmitter {
      *  - 'error' Error
      */
     private cap;
+    private capModule;
+    private decoders;
+    private PROTOCOL;
     private linkType;
     private readonly GROUP;
     private readonly PORT;

@@ -6,13 +6,16 @@ export declare class PSNServer extends EventEmitter {
     private readonly port;
     private iface?;
     private ttl;
+    private dryRun;
     private frameId;
     private readonly versionHigh;
     private readonly versionLow;
     /**
      * Bind a UDP socket for PSN multicast and configure TTL/interface if provided.
      */
-    start(ifaceIp?: string, ttl?: number): void;
+    start(ifaceIp?: string, ttl?: number, opts?: {
+        dryRun?: boolean;
+    }): void;
     stop(): void;
     /** Send INFO (systemName + tracker names). */
     sendInfo(systemName: string, trackers: Record<number, string>): void;

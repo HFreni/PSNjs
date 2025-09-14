@@ -18,7 +18,7 @@
   "scripts": {
     "build": "npm run build:cjs && npm run build:esm",
     "build:cjs": "tsc -p tsconfig.json",
-    "build:esm": "tsc -p tsconfig.esm.json && node scripts/rename-esm.js",
+    "build:esm": "tsc -p tsconfig.esm.json && node scripts/rename-esm.js && node -e \"const fs=require('fs'); fs.mkdirSync('dist/esm',{recursive:true}); fs.writeFileSync('dist/esm/package.json', JSON.stringify({type:'module'}, null, 2));\"",
     "start": "node dist/index.js",
     "dev": "npx ts-node src/index.ts",
     "listen": "npx ts-node src/index-listener.ts",

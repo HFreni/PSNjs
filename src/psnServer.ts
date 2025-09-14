@@ -38,6 +38,7 @@ export class PSNServer extends EventEmitter {
   private readonly port = 56565;
   private iface?: string;
   private ttl = 1;
+  private dryRun = process.env.PSN_DRYRUN === '1';
   // PSN header fields
   private frameId = 0;
   private readonly versionHigh = 2;
@@ -46,9 +47,16 @@ export class PSNServer extends EventEmitter {
   /**
    * Bind a UDP socket for PSN multicast and configure TTL/interface if provided.
    */
-  start(ifaceIp?: string, ttl = 1) {
+  start(ifaceIp?: string, ttl = 1, opts?: { dryRun?: boolean }) {
     this.iface = ifaceIp;
     this.ttl = ttl;
+    this.dryRun = opts?.dryRun ?? this.dryRun;
+    if (this.dryRun) {
+      const info: ReadyInfo = { addr: this.addr, port: this.port, iface: this.iface, ttl: this.ttl };
+      // Emit ready without binding any sockets
+      this.emit('ready', info);
+      return;
+    }
     this.socket = dgram.createSocket('udp4');
     this.socket.once('error', (e) => this.emit('error', e));
     this.socket.bind(0, ifaceIp, () => {
@@ -70,6 +78,11 @@ export class PSNServer extends EventEmitter {
 
   /** Send INFO (systemName + tracker names). */
   sendInfo(systemName: string, trackers: Record<number, string>) {
+    if (this.dryRun) {
+      const trackerCount = Object.keys(trackers).length;
+      console.log(`[PSN TX INFO DRY-RUN] system=${systemName} trackers=${trackerCount}`);
+      return;
+    }
     const chunks: Buffer[] = [];
 
     // header
@@ -92,6 +105,11 @@ export class PSNServer extends EventEmitter {
 
   /** Send DATA (per‑tracker floats). */
   sendData(data: Record<number, TrackerData>) {
+    if (this.dryRun) {
+      const ids = Object.keys(data).join(',');
+      console.log(`[PSN TX DATA DRY-RUN] ids=[${ids}]`);
+      return;
+    }
     const chunks: Buffer[] = [];
 
     // header

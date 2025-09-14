@@ -23,23 +23,13 @@ SOFTWARE.
 */
 // src/psnClient.ts
 import { EventEmitter } from 'events';
-import { readChunkHeader, CHUNK } from './utils';
-// Packet capture via "cap" to sniff PSN multicast without joining at the socket level.
-const CapModule = require('cap');
-const Cap = CapModule.Cap;
-const decoders = CapModule.decoders;
-const PROTOCOL = decoders.PROTOCOL;
+import { readChunkHeader, CHUNK } from './utils.mjs';
+// Note: "cap" (native addon) is lazy-required inside start() so that simply
+// importing this module does not require native binaries. This keeps CI and
+// packaging environments happy when libpcap is not available.
 export class PSNClient extends EventEmitter {
     constructor() {
         super(...arguments);
-        /**
-         * Listens to PSN UDP multicast and emits high-level events:
-         *  - 'ready' { device }
-         *  - 'info'  InfoPayload
-         *  - 'data'  DataPayload
-         *  - 'error' Error
-         */
-        this.cap = new Cap();
         this.GROUP = '236.10.10.10';
         this.PORT = 56565;
         this.DEBUG = process.env.PSN_DEBUG === '1';
@@ -51,6 +41,12 @@ export class PSNClient extends EventEmitter {
      * Note: `TTL` is ignored in capture mode and kept for API symmetry.
      */
     start(ifaceIp, TTL) {
+        // Lazy-load native module
+        const CapModule = require('cap');
+        this.capModule = CapModule;
+        this.cap = new CapModule.Cap();
+        this.decoders = CapModule.decoders;
+        this.PROTOCOL = this.decoders.PROTOCOL;
         const dev = this.findDeviceByIp(ifaceIp);
         if (!dev)
             throw new Error(`No capture device for IP ${ifaceIp}`);
@@ -62,16 +58,16 @@ export class PSNClient extends EventEmitter {
         this.cap.on('packet', (nbytes) => {
             let off = 0;
             if (this.linkType === 'ETHERNET') {
-                const eth = decoders.Ethernet(buffer);
-                if (eth.info.type !== PROTOCOL.ETHERNET.IPV4)
+                const eth = this.decoders.Ethernet(buffer);
+                if (eth.info.type !== this.PROTOCOL.ETHERNET.IPV4)
                     return;
                 off = eth.offset;
             }
-            const ip = decoders.IPV4(buffer, off);
-            if (ip.info.protocol !== PROTOCOL.IP.UDP)
+            const ip = this.decoders.IPV4(buffer, off);
+            if (ip.info.protocol !== this.PROTOCOL.IP.UDP)
                 return;
             off = ip.offset;
-            const udp = decoders.UDP(buffer, off);
+            const udp = this.decoders.UDP(buffer, off);
             off = udp.offset;
             const psnBuf = buffer.slice(off, nbytes);
             try {
@@ -85,12 +81,12 @@ export class PSNClient extends EventEmitter {
         this.emit('ready', { device: dev });
     }
     stop() {
-        this.cap.close();
+        this.cap?.close();
         this.emit('stopped');
     }
     /** Resolve the pcap device name for a given IPv4 address (or pick a fallback). */
     findDeviceByIp(ip) {
-        const devs = CapModule.deviceList();
+        const devs = this.capModule?.deviceList?.() ?? [];
         for (const d of devs) {
             if (d.addresses.some((a) => a.addr === ip))
                 return d.name;

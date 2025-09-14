@@ -33,12 +33,13 @@ function printHelp() {
 
 Usage:
   psnjs listen [--config psn.config.json] [--iface <ip>] [--ttl <n>] [--osc ...flags]
-  psnjs send-sim [--iface <ip>] [--ttl <n>]
+  psnjs send-sim [--iface <ip>] [--ttl <n>] [--dry-run]
 
 Flags:
   --config <file>          JSON config path
   --iface <ip>             Interface IP to bind capture/sender
   --ttl <n>                Multicast TTL (sender only; accepted for symmetry)
+  --dry-run                Do not bind sockets; log what would be sent
   --osc                    Enable OSC routing
   --osc-host <host>        OSC TCP host
   --osc-port <port>        OSC TCP port
@@ -78,6 +79,9 @@ async function cmdListen(argv) {
 }
 async function cmdSendSim(argv) {
     const cfg = (0, config_1.loadAppConfigFromCliAndEnv)(argv);
+    // Simple passthrough of dry-run flag via env for server convenience
+    if (argv.includes('--dry-run'))
+        process.env.PSN_DRYRUN = '1';
     const server = new psnServer_1.PSNServer();
     server.on('ready', info => {
         console.log(`🚀 PSN server ${info.addr}:${info.port} iface=${info.iface ?? 'auto'} ttl=${info.ttl}`);
@@ -97,7 +101,8 @@ async function cmdSendSim(argv) {
         }, dt);
     });
     server.on('error', e => console.error('❌', e));
-    server.start(cfg.iface, cfg.ttl || 1);
+    const dryRun = process.env.PSN_DRYRUN === '1';
+    server.start(cfg.iface, cfg.ttl || 1, { dryRun });
 }
 async function main() {
     const [, , subcmd, ...rest] = process.argv;

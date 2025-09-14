@@ -27,7 +27,7 @@ SOFTWARE.
 //   - iface: optional IPv4 address to bind (e.g., "192.168.1.42").
 //   - ttl: multicast TTL (default 1).
 import os from 'os';
-import { PSNServer } from './psnServer';
+import { PSNServer } from './psnServer.mjs';
 // -------------------------------------------------------------
 // CLI args: [iface] [ttl]
 // -------------------------------------------------------------

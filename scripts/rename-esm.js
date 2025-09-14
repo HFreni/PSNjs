@@ -34,10 +34,27 @@ function walk(dir, fn) {
 
 const root = path.resolve(__dirname, '..', 'dist', 'esm');
 if (fs.existsSync(root)) {
-  walk(root, (p) => {
-    if (p.endsWith('.js')) {
-      const mjs = p.replace(/\.js$/, '.mjs');
-      fs.renameSync(p, mjs);
-    }
-  });
+  // First rename .js -> .mjs
+  const files = [];
+  walk(root, (p) => { if (p.endsWith('.js')) files.push(p); });
+  for (const p of files) {
+    const mjs = p.replace(/\.js$/, '.mjs');
+    fs.renameSync(p, mjs);
+  }
+  // Then update internal import/export specifiers to .mjs
+  const mfiles = [];
+  walk(root, (p) => { if (p.endsWith('.mjs')) mfiles.push(p); });
+  const reJs = /(from\s+['"])(\.[^'"]*?)\.js(['"];?)/g;
+  const reNoExt = /(from\s+['"])(\.[^'"\.][^'"\)]*?)(['"];?)/g;
+  for (const p of mfiles) {
+    let s = fs.readFileSync(p, 'utf8');
+    // './x.js' -> './x.mjs'
+    s = s.replace(reJs, (m, a, b, c) => `${a}${b}.mjs${c}`);
+    // './x' -> './x.mjs' (only when no extension present)
+    s = s.replace(reNoExt, (m, a, b, c) => {
+      if (/\.(mjs|cjs|js|json)$/.test(b)) return m; // has ext
+      return `${a}${b}.mjs${c}`;
+    });
+    fs.writeFileSync(p, s);
+  }
 }

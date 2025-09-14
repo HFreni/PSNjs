@@ -8,6 +8,7 @@ export type AppConfig = {
     ttl?: number;
     osc?: OscRouterConfig | null;
     parser?: ParserConfig;
+    dryRun?: boolean;
 };
 export declare function loadJsonConfig(configPath?: string): Partial<AppConfig>;
 export declare function loadAppConfigFromCliAndEnv(argv: string[], json?: Partial<AppConfig>): AppConfig;

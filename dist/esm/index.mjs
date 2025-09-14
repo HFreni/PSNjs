@@ -29,8 +29,8 @@ SOFTWARE.
 //   - --osc/--osc-host/--osc-port/--osc-addr-* flags override OSC env config
 import os from 'os';
 import arg from 'arg';
-import { PSNClient } from './psnClient';
-import { OSCRouter, loadOscRouterConfigFromEnvAndCli } from './oscRouter';
+import { PSNClient } from './psnClient.mjs';
+import { OSCRouter, loadOscRouterConfigFromEnvAndCli } from './oscRouter.mjs';
 // -------------------------------------------------------------
 // CLI args: [iface] [ttl]
 // -------------------------------------------------------------

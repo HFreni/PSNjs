@@ -23,13 +23,14 @@ SOFTWARE.
 */
 import dgram from 'dgram';
 import { EventEmitter } from 'events';
-import { buildChunk, CHUNK } from './utils';
+import { buildChunk, CHUNK } from './utils.mjs';
 export class PSNServer extends EventEmitter {
     constructor() {
         super(...arguments);
         this.addr = '236.10.10.10';
         this.port = 56565;
         this.ttl = 1;
+        this.dryRun = process.env.PSN_DRYRUN === '1';
         // PSN header fields
         this.frameId = 0;
         this.versionHigh = 2;
@@ -38,9 +39,16 @@ export class PSNServer extends EventEmitter {
     /**
      * Bind a UDP socket for PSN multicast and configure TTL/interface if provided.
      */
-    start(ifaceIp, ttl = 1) {
+    start(ifaceIp, ttl = 1, opts) {
         this.iface = ifaceIp;
         this.ttl = ttl;
+        this.dryRun = opts?.dryRun ?? this.dryRun;
+        if (this.dryRun) {
+            const info = { addr: this.addr, port: this.port, iface: this.iface, ttl: this.ttl };
+            // Emit ready without binding any sockets
+            this.emit('ready', info);
+            return;
+        }
         this.socket = dgram.createSocket('udp4');
         this.socket.once('error', (e) => this.emit('error', e));
         this.socket.bind(0, ifaceIp, () => {
@@ -62,6 +70,11 @@ export class PSNServer extends EventEmitter {
     }
     /** Send INFO (systemName + tracker names). */
     sendInfo(systemName, trackers) {
+        if (this.dryRun) {
+            const trackerCount = Object.keys(trackers).length;
+            console.log(`[PSN TX INFO DRY-RUN] system=${systemName} trackers=${trackerCount}`);
+            return;
+        }
         const chunks = [];
         // header
         const hdr = this.makeHeader();
@@ -79,6 +92,11 @@ export class PSNServer extends EventEmitter {
     }
     /** Send DATA (per‑tracker floats). */
     sendData(data) {
+        if (this.dryRun) {
+            const ids = Object.keys(data).join(',');
+            console.log(`[PSN TX DATA DRY-RUN] ids=[${ids}]`);
+            return;
+        }
         const chunks = [];
         // header
         const hdr = this.makeHeader();

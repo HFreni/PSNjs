@@ -35,6 +35,7 @@ npx ts-node src/psnTx.ts 192.168.1.223 1
 ```
 
 - The sender multicasts to `236.10.10.10:56565` and logs each DATA frame.
+- CI-safe: set `PSN_DRYRUN=1` or pass `--dry-run` to avoid binding sockets (logs only).
 
 OSC routing (optional)
 

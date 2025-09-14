@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 import net from 'net';
-import { OSCTcpClient } from './osc';
+import { OSCTcpClient } from './osc.mjs';
 function readCString(buf, off) {
     let end = off;
     while (end < buf.length && buf[end] !== 0)

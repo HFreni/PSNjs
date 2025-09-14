@@ -36,6 +36,7 @@ export type AppConfig = {
   ttl?: number;
   osc?: OscRouterConfig | null;
   parser?: ParserConfig;
+  dryRun?: boolean;
 };
 
 export function loadJsonConfig(configPath?: string): Partial<AppConfig> {
@@ -74,6 +75,7 @@ export function loadAppConfigFromCliAndEnv(argv: string[], json?: Partial<AppCon
     '--osc-addr-accel-z': String,
     '--debug': Boolean,
     '--flatten': Boolean,
+    '--dry-run': Boolean,
   }, { argv });
 
   const fromFile = json || (a['--config'] ? loadJsonConfig(a['--config']) : {});
@@ -99,6 +101,7 @@ export function loadAppConfigFromCliAndEnv(argv: string[], json?: Partial<AppCon
     debug: a['--debug'] ?? fromFile?.parser?.debug ?? (process.env.PSN_DEBUG === '1'),
     flatten: a['--flatten'] ?? fromFile?.parser?.flatten ?? (process.env.PSN_FLATTEN === '1'),
   };
+  const dryRun = a['--dry-run'] ?? fromFile?.dryRun ?? (process.env.PSN_DRYRUN === '1');
 
-  return { iface, ttl, osc, parser };
+  return { iface, ttl, osc, parser, dryRun };
 }

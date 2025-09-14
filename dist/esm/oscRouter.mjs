@@ -1,4 +1,4 @@
-import { OSCTcpClient } from './osc';
+import { OSCTcpClient } from './osc.mjs';
 /**
  * Replace supported placeholders in address with tracker-specific data
  * Supported: {id}, {name}

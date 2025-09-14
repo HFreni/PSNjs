@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 // src/index-listener.ts
-import { PSNClient } from './psnClient';
+import { PSNClient } from './psnClient.mjs';
 // Usage: ts-node src/index-listener.ts [iface]
 // - iface: optional IPv4 address to bind capture (e.g., "192.168.1.42").
 //          When omitted, the first non-loopback interface is used.
