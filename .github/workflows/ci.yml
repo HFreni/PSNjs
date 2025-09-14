@@ -48,8 +48,9 @@ jobs:
       - name: Upload package tarball
         uses: actions/upload-artifact@v4
         with:
-          name: psnjs-tarball
+          name: psnjs-tarball-node-${{ matrix.node-version }}
           path: ${{ env.PKG_TGZ }}
+          overwrite: true
 
       - name: Test install (CJS)
         run: |
