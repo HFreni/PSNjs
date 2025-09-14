@@ -27,11 +27,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 // src/index.ts
-// Entrypoint: PSN listener with optional OSC routing.
-// Usage: ts-node src/index.ts [iface] [ttl] [--osc ...flags]
+// Entrypoint: PSN listener (no OSC routing).
+// Usage: ts-node src/index.ts [iface] [ttl]
 //   - iface: optional IPv4 address to bind capture (auto-select if omitted)
 //   - ttl: unused in capture mode; reserved for symmetry with sender
-//   - --osc/--osc-host/--osc-port/--osc-addr-* flags override OSC env config
 const os_1 = __importDefault(require("os"));
 const psnClient_1 = require("./psnClient");
 // -------------------------------------------------------------
@@ -56,7 +55,7 @@ console.log();
 // 1) Start the PSN client (listener)
 // -------------------------------------------------------------
 const client = new psnClient_1.PSNClient();
-// Cache PSN INFO names to annotate DATA logs and fill OSC {name}
+// Cache PSN INFO names to annotate DATA logs
 let trackerNames = {};
 client.on('ready', info => {
     console.log(`🎧 Client listening on ${info.addr}:${info.port} (iface=${info.iface}, ttl=${info.ttl})\n`);
