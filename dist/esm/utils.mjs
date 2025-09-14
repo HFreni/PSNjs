@@ -1,8 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.CHUNK = void 0;
-exports.readChunkHeader = readChunkHeader;
-exports.buildChunk = buildChunk;
 /*
 MIT License
 
@@ -26,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-const buffer_1 = require("buffer");
+import { Buffer } from 'buffer';
 /**
  * Read a PSN “pch32” chunk header at offset:
  *   - first 16 bits (LE):     (hasSub<<15) | chunkID
@@ -35,7 +30,7 @@ const buffer_1 = require("buffer");
 /**
  * Read a pch32 header at offset and return its fields.
  */
-function readChunkHeader(buf, off) {
+export function readChunkHeader(buf, off) {
     const wordA = buf.readUInt16LE(off);
     const wordB = buf.readUInt16LE(off + 2);
     // Tolerant decoding: some implementations set the hasSub bit on the id word (A),
@@ -54,7 +49,7 @@ function readChunkHeader(buf, off) {
 /**
  * PSN chunk IDs (root + subtrees for INFO/DATA).
  */
-exports.CHUNK = {
+export const CHUNK = {
     INFO_PACKET: 0x6756,
     DATA_PACKET: 0x6755,
     INFO: {
@@ -79,20 +74,20 @@ exports.CHUNK = {
  * Build a pch32 chunk buffer.
  * If payload is an array, it is treated as sub-chunks and the hasSub bit is set.
  */
-function buildChunk(id, payload) {
+export function buildChunk(id, payload) {
     let body;
     let hasSub = false;
     if (Array.isArray(payload)) {
         hasSub = true;
-        body = buffer_1.Buffer.concat(payload);
+        body = Buffer.concat(payload);
     }
     else {
         body = payload;
     }
     const len = body.length & 0xffff;
-    const header = buffer_1.Buffer.alloc(4);
+    const header = Buffer.alloc(4);
     const first16 = ((hasSub ? 1 : 0) << 15) | (id & 0x7fff);
     header.writeUInt16LE(first16, 0);
     header.writeUInt16LE(len, 2);
-    return buffer_1.Buffer.concat([header, body]);
+    return Buffer.concat([header, body]);
 }

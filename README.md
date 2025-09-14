@@ -1,9 +1,16 @@
 PSNjs — PSN Client and Server (with optional OSC routing)
 
-PSNjs is a small TypeScript toolkit for working with PosiStageNet (PSN):
+PSNjs is a small TypeScript toolkit for PosiStageNet (PSN):
 - PSN Client: capture and parse INFO/DATA from the PSN multicast group.
 - PSN Server: simulate a PSN source and transmit INFO/DATA.
 - Optional OSC Routing: forward PSN axes to user‑defined OSC/TCP addresses.
+
+Install / Build
+
+- From source for local development:
+
+  npm install
+  npm run build
 
 Quick start
 
@@ -15,7 +22,7 @@ Quick start
 
   npm run dev -- [IFACE] [TTL]
 
-- Simulate PSN (sender) programmatically: see `src/psnServer.ts` or the simple example in DEVELOPERS.md.
+- Simulate PSN (sender) programmatically: see `src/psnServer.ts` or the example in DEVELOPERS.md.
 
 Send PSN (simulation)
 
@@ -193,6 +200,34 @@ client.on('info', i => router.updateInfo(i));
 client.on('data', d => router.routeData(d));
 client.start(process.env.IFACE);
 ```
+
+Publish / Link
+
+- Local link for development:
+
+```
+npm run build
+npm link   # in this repo
+
+# in your consuming project
+npm link psnjs
+```
+
+- Pack and install from a tarball:
+
+```
+npm run build
+npm pack                   # produces psnjs-<version>.tgz
+npm install ./psnjs-*.tgz  # in your consuming project
+```
+
+- Exports and types:
+  - `main` points to `dist/lib.js` (CommonJS)
+  - `types` points to `dist/lib.d.ts`
+  - Dual exports:
+    - `require` → `dist/lib.js` (CJS)
+    - `import` → `dist/esm/lib.mjs` (ESM)
+    - `types` → `dist/lib.d.ts`
 
 **Data Flow**
 

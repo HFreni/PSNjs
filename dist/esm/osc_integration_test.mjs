@@ -1,8 +1,3 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
 /*
 MIT License
 
@@ -26,8 +21,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-const net_1 = __importDefault(require("net"));
-const osc_1 = require("./osc");
+import net from 'net';
+import { OSCTcpClient } from './osc';
 function readCString(buf, off) {
     let end = off;
     while (end < buf.length && buf[end] !== 0)
@@ -70,7 +65,7 @@ async function main() {
     const port = 9000;
     const host = '127.0.0.1';
     // Simple OSC TCP server
-    const server = net_1.default.createServer((sock) => {
+    const server = net.createServer((sock) => {
         let buf = Buffer.alloc(0);
         sock.on('data', (chunk) => {
             buf = Buffer.concat([buf, chunk]);
@@ -88,7 +83,7 @@ async function main() {
     await new Promise((resolve) => server.listen(port, host, resolve));
     console.log(`[OSC SERVER] listening on ${host}:${port}`);
     // Client sends a few messages
-    const client = new osc_1.OSCTcpClient(host, port);
+    const client = new OSCTcpClient(host, port);
     await client.send('/test/x', [1.23]);
     await client.send('/test/y', [4.56]);
     await client.send('/test/z', [7.89]);

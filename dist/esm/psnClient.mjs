@@ -1,6 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.PSNClient = void 0;
 /*
 MIT License
 
@@ -25,14 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 // src/psnClient.ts
-const events_1 = require("events");
-const utils_1 = require("./utils");
+import { EventEmitter } from 'events';
+import { readChunkHeader, CHUNK } from './utils';
 // Packet capture via "cap" to sniff PSN multicast without joining at the socket level.
 const CapModule = require('cap');
 const Cap = CapModule.Cap;
 const decoders = CapModule.decoders;
 const PROTOCOL = decoders.PROTOCOL;
-class PSNClient extends events_1.EventEmitter {
+export class PSNClient extends EventEmitter {
     constructor() {
         super(...arguments);
         /**
@@ -106,17 +103,17 @@ class PSNClient extends events_1.EventEmitter {
         // Each PSN packet is a pch32 tree with a root (INFO_PACKET/DATA_PACKET)
         // containing a header subchunk and a list of trackers.
         let off = 0;
-        const root = (0, utils_1.readChunkHeader)(buf, off);
+        const root = readChunkHeader(buf, off);
         off += 4;
-        if (root.id !== utils_1.CHUNK.INFO_PACKET && root.id !== utils_1.CHUNK.DATA_PACKET) {
+        if (root.id !== CHUNK.INFO_PACKET && root.id !== CHUNK.DATA_PACKET) {
             throw new Error(`Unknown root chunk id 0x${root.id.toString(16)}`);
         }
-        const isInfo = root.id === utils_1.CHUNK.INFO_PACKET;
+        const isInfo = root.id === CHUNK.INFO_PACKET;
         const endRoot = Math.min(off + root.len, buf.length);
         // packet header
         if (off + 4 > endRoot)
             throw new Error('Truncated PSN header');
-        const hdrCh = (0, utils_1.readChunkHeader)(buf, off);
+        const hdrCh = readChunkHeader(buf, off);
         off += 4;
         if (off + hdrCh.len > endRoot)
             throw new Error('Truncated PSN header payload');
@@ -130,16 +127,16 @@ class PSNClient extends events_1.EventEmitter {
         if (isInfo) {
             const payload = { header, systemName: '', trackers: {} };
             while (off + 4 <= endRoot) {
-                const ch = (0, utils_1.readChunkHeader)(buf, off);
+                const ch = readChunkHeader(buf, off);
                 off += 4;
                 if (this.DEBUG)
                     console.log(`[PSN INFO] sub id=0x${ch.id.toString(16)} len=${ch.len}`);
                 if (off + ch.len > endRoot)
                     break;
-                if (ch.id === utils_1.CHUNK.INFO.SYSTEM_NAME) {
+                if (ch.id === CHUNK.INFO.SYSTEM_NAME) {
                     payload.systemName = buf.toString('utf8', off, off + ch.len);
                 }
-                else if (ch.id === utils_1.CHUNK.INFO.TRACKER_LIST) {
+                else if (ch.id === CHUNK.INFO.TRACKER_LIST) {
                     if (this.DEBUG)
                         console.log(`[PSN INFO] parsing tracker list len=${ch.len}`);
                     payload.trackers = this.parseInfoTrackers(buf.slice(off, off + ch.len));
@@ -151,13 +148,13 @@ class PSNClient extends events_1.EventEmitter {
         else {
             const payload = { header, trackers: {} };
             while (off + 4 <= endRoot) {
-                const ch = (0, utils_1.readChunkHeader)(buf, off);
+                const ch = readChunkHeader(buf, off);
                 off += 4;
                 if (this.DEBUG)
                     console.log(`[PSN DATA] sub id=0x${ch.id.toString(16)} len=${ch.len}`);
                 if (off + ch.len > endRoot)
                     break;
-                if (ch.id === utils_1.CHUNK.DATA.TRACKER_LIST) {
+                if (ch.id === CHUNK.DATA.TRACKER_LIST) {
                     if (this.DEBUG)
                         console.log(`[PSN DATA] parsing tracker list len=${ch.len}`);
                     payload.trackers = this.parseDataTrackers(buf.slice(off, off + ch.len));
@@ -186,7 +183,7 @@ class PSNClient extends events_1.EventEmitter {
             return s;
         };
         while (off + 4 <= buf.length) {
-            const wrapper = (0, utils_1.readChunkHeader)(buf, off);
+            const wrapper = readChunkHeader(buf, off);
             off += 4;
             if (this.DEBUG)
                 console.log(`[PSN INFO] tracker wrapper id=0x${wrapper.id.toString(16)} len=${wrapper.len} hasSub=${wrapper.hasSub}`);
@@ -204,7 +201,7 @@ class PSNClient extends events_1.EventEmitter {
             }
             let nameSet = false;
             while (off + 4 <= end) {
-                const sub = (0, utils_1.readChunkHeader)(buf, off);
+                const sub = readChunkHeader(buf, off);
                 off += 4;
                 if (this.DEBUG)
                     console.log(`  [PSN INFO] sub id=0x${sub.id.toString(16)} len=${sub.len}`);
@@ -212,7 +209,7 @@ class PSNClient extends events_1.EventEmitter {
                     off = end;
                     break;
                 }
-                if (sub.id === utils_1.CHUNK.INFO.TRACKER_NAME) {
+                if (sub.id === CHUNK.INFO.TRACKER_NAME) {
                     const nameBuf = buf.slice(off, off + sub.len);
                     const name = extractAscii(nameBuf);
                     if (name) {
@@ -251,14 +248,14 @@ class PSNClient extends events_1.EventEmitter {
             let idx = 0;
             let current = null;
             while (off + 4 <= buf.length) {
-                const h = (0, utils_1.readChunkHeader)(buf, off);
+                const h = readChunkHeader(buf, off);
                 off += 4;
                 if (off + h.len > buf.length)
                     break;
                 const data = buf.slice(off, off + h.len);
                 off += h.len;
                 const id = h.id;
-                if (id === utils_1.CHUNK.DATA.POS) {
+                if (id === CHUNK.DATA.POS) {
                     idx += 1;
                     current = {};
                     grouped[idx] = current;
@@ -277,27 +274,27 @@ class PSNClient extends events_1.EventEmitter {
                 //   0x0005 TRGTPOS    → float32 x3  (x,y,z)
                 //   0x0006 TIMESTAMP  → uint64      (tracker timestamp)
                 switch (id) {
-                    case utils_1.CHUNK.DATA.SPEED:
+                    case CHUNK.DATA.SPEED:
                         if (data.length >= 12)
                             current.speed = { x: data.readFloatLE(0), y: data.readFloatLE(4), z: data.readFloatLE(8) };
                         break;
-                    case utils_1.CHUNK.DATA.ORI:
+                    case CHUNK.DATA.ORI:
                         if (data.length >= 12)
                             current.orientation = { x: data.readFloatLE(0), y: data.readFloatLE(4), z: data.readFloatLE(8) };
                         break;
-                    case utils_1.CHUNK.DATA.STATUS:
+                    case CHUNK.DATA.STATUS:
                         if (data.length >= 4)
                             current.validity = data.readFloatLE(0);
                         break;
-                    case utils_1.CHUNK.DATA.ACCEL:
+                    case CHUNK.DATA.ACCEL:
                         if (data.length >= 12)
                             current.accel = { x: data.readFloatLE(0), y: data.readFloatLE(4), z: data.readFloatLE(8) };
                         break;
-                    case utils_1.CHUNK.DATA.TRGTPOS:
+                    case CHUNK.DATA.TRGTPOS:
                         if (data.length >= 12)
                             current.targetPos = { x: data.readFloatLE(0), y: data.readFloatLE(4), z: data.readFloatLE(8) };
                         break;
-                    case utils_1.CHUNK.DATA.TIMESTAMP:
+                    case CHUNK.DATA.TIMESTAMP:
                         if (data.length >= 8)
                             current.trackerTimestamp = data.readBigUInt64LE(0);
                         break;
@@ -309,7 +306,7 @@ class PSNClient extends events_1.EventEmitter {
         const out = {};
         let off = 0;
         while (off + 4 <= buf.length) {
-            const wrapper = (0, utils_1.readChunkHeader)(buf, off);
+            const wrapper = readChunkHeader(buf, off);
             off += 4;
             if (this.DEBUG)
                 console.log(`[PSN DATA] tracker wrapper id=0x${wrapper.id.toString(16)} len=${wrapper.len}`);
@@ -317,7 +314,7 @@ class PSNClient extends events_1.EventEmitter {
             const trk = {};
             let end = Math.min(off + wrapper.len, buf.length);
             while (off + 4 <= end) {
-                const sub = (0, utils_1.readChunkHeader)(buf, off);
+                const sub = readChunkHeader(buf, off);
                 off += 4;
                 if (this.DEBUG)
                     console.log(`  [PSN DATA] sub id=0x${sub.id.toString(16)} len=${sub.len}`);
@@ -335,31 +332,31 @@ class PSNClient extends events_1.EventEmitter {
                 //   0x0005 TRGTPOS    → float32 x3  (x,y,z)
                 //   0x0006 TIMESTAMP  → uint64      (tracker timestamp)
                 switch (sub.id) {
-                    case utils_1.CHUNK.DATA.POS:
+                    case CHUNK.DATA.POS:
                         if (data.length >= 12)
                             trk.pos = { x: data.readFloatLE(0), y: data.readFloatLE(4), z: data.readFloatLE(8) };
                         break;
-                    case utils_1.CHUNK.DATA.SPEED:
+                    case CHUNK.DATA.SPEED:
                         if (data.length >= 12)
                             trk.speed = { x: data.readFloatLE(0), y: data.readFloatLE(4), z: data.readFloatLE(8) };
                         break;
-                    case utils_1.CHUNK.DATA.ORI:
+                    case CHUNK.DATA.ORI:
                         if (data.length >= 12)
                             trk.orientation = { x: data.readFloatLE(0), y: data.readFloatLE(4), z: data.readFloatLE(8) };
                         break;
-                    case utils_1.CHUNK.DATA.STATUS:
+                    case CHUNK.DATA.STATUS:
                         if (data.length >= 4)
                             trk.validity = data.readFloatLE(0);
                         break;
-                    case utils_1.CHUNK.DATA.ACCEL:
+                    case CHUNK.DATA.ACCEL:
                         if (data.length >= 12)
                             trk.accel = { x: data.readFloatLE(0), y: data.readFloatLE(4), z: data.readFloatLE(8) };
                         break;
-                    case utils_1.CHUNK.DATA.TRGTPOS:
+                    case CHUNK.DATA.TRGTPOS:
                         if (data.length >= 12)
                             trk.targetPos = { x: data.readFloatLE(0), y: data.readFloatLE(4), z: data.readFloatLE(8) };
                         break;
-                    case utils_1.CHUNK.DATA.TIMESTAMP:
+                    case CHUNK.DATA.TIMESTAMP:
                         if (data.length >= 8)
                             trk.trackerTimestamp = data.readBigUInt64LE(0);
                         break;
@@ -379,14 +376,14 @@ class PSNClient extends events_1.EventEmitter {
         off = 0;
         let current = null;
         while (off + 4 <= buf.length) {
-            const h = (0, utils_1.readChunkHeader)(buf, off);
+            const h = readChunkHeader(buf, off);
             off += 4;
             if (off + h.len > buf.length)
                 break;
             const data = buf.slice(off, off + h.len);
             off += h.len;
             const id = h.id;
-            if (id === utils_1.CHUNK.DATA.POS) {
+            if (id === CHUNK.DATA.POS) {
                 idx += 1;
                 current = {};
                 grouped[idx] = current;
@@ -397,27 +394,27 @@ class PSNClient extends events_1.EventEmitter {
             if (!current)
                 continue;
             switch (id) {
-                case utils_1.CHUNK.DATA.SPEED:
+                case CHUNK.DATA.SPEED:
                     if (data.length >= 12)
                         current.speed = { x: data.readFloatLE(0), y: data.readFloatLE(4), z: data.readFloatLE(8) };
                     break;
-                case utils_1.CHUNK.DATA.ORI:
+                case CHUNK.DATA.ORI:
                     if (data.length >= 12)
                         current.orientation = { x: data.readFloatLE(0), y: data.readFloatLE(4), z: data.readFloatLE(8) };
                     break;
-                case utils_1.CHUNK.DATA.STATUS:
+                case CHUNK.DATA.STATUS:
                     if (data.length >= 4)
                         current.validity = data.readFloatLE(0);
                     break;
-                case utils_1.CHUNK.DATA.ACCEL:
+                case CHUNK.DATA.ACCEL:
                     if (data.length >= 12)
                         current.accel = { x: data.readFloatLE(0), y: data.readFloatLE(4), z: data.readFloatLE(8) };
                     break;
-                case utils_1.CHUNK.DATA.TRGTPOS:
+                case CHUNK.DATA.TRGTPOS:
                     if (data.length >= 12)
                         current.targetPos = { x: data.readFloatLE(0), y: data.readFloatLE(4), z: data.readFloatLE(8) };
                     break;
-                case utils_1.CHUNK.DATA.TIMESTAMP:
+                case CHUNK.DATA.TIMESTAMP:
                     if (data.length >= 8)
                         current.trackerTimestamp = data.readBigUInt64LE(0);
                     break;
@@ -426,4 +423,3 @@ class PSNClient extends events_1.EventEmitter {
         return grouped;
     }
 }
-exports.PSNClient = PSNClient;

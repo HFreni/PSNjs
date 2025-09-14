@@ -1,8 +1,3 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
 /*
 MIT License
 
@@ -32,10 +27,10 @@ SOFTWARE.
 //   - iface: optional IPv4 address to bind capture (auto-select if omitted)
 //   - ttl: unused in capture mode; reserved for symmetry with sender
 //   - --osc/--osc-host/--osc-port/--osc-addr-* flags override OSC env config
-const os_1 = __importDefault(require("os"));
-const arg_1 = __importDefault(require("arg"));
-const psnClient_1 = require("./psnClient");
-const oscRouter_1 = require("./oscRouter");
+import os from 'os';
+import arg from 'arg';
+import { PSNClient } from './psnClient';
+import { OSCRouter, loadOscRouterConfigFromEnvAndCli } from './oscRouter';
 // -------------------------------------------------------------
 // CLI args: [iface] [ttl]
 // -------------------------------------------------------------
@@ -49,7 +44,7 @@ const TTL = TTL_ARG ? parseInt(TTL_ARG, 10) : 1; // default TTL = 1
 // -------------------------------------------------------------
 let oscRouter = null;
 try {
-    const a = (0, arg_1.default)({
+    const a = arg({
         '--osc': Boolean,
         '--osc-host': String,
         '--osc-port': Number,
@@ -67,7 +62,7 @@ try {
         '--osc-addr-accel-y': String,
         '--osc-addr-accel-z': String,
     });
-    const oscCfg = (0, oscRouter_1.loadOscRouterConfigFromEnvAndCli)({
+    const oscCfg = loadOscRouterConfigFromEnvAndCli({
         enabled: a['--osc'],
         host: a['--osc-host'],
         port: a['--osc-port'],
@@ -77,7 +72,7 @@ try {
         ori: { x: a['--osc-addr-ori-x'], y: a['--osc-addr-ori-y'], z: a['--osc-addr-ori-z'] },
         accel: { x: a['--osc-addr-accel-x'], y: a['--osc-addr-accel-y'], z: a['--osc-addr-accel-z'] },
     });
-    oscRouter = oscCfg ? new oscRouter_1.OSCRouter(oscCfg) : null;
+    oscRouter = oscCfg ? new OSCRouter(oscCfg) : null;
 }
 catch {
     // ignore CLI parse errors to keep backwards compatibility
@@ -86,7 +81,7 @@ catch {
 // Show available NICs to pick from (for convenience when choosing iface)
 // -------------------------------------------------------------
 console.log('Available network interfaces:');
-Object.entries(os_1.default.networkInterfaces()).forEach(([name, addrs]) => {
+Object.entries(os.networkInterfaces()).forEach(([name, addrs]) => {
     if (!addrs)
         return;
     addrs.forEach(a => {
@@ -97,7 +92,7 @@ console.log();
 // -------------------------------------------------------------
 // 1) Start the PSN client (listener)
 // -------------------------------------------------------------
-const client = new psnClient_1.PSNClient();
+const client = new PSNClient();
 // Cache PSN INFO names to annotate DATA logs and fill OSC {name}
 let trackerNames = {};
 client.on('ready', info => {

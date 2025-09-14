@@ -1,10 +1,3 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.OSCTcpClient = void 0;
-exports.encodeOSCMessage = encodeOSCMessage;
 /*
 MIT License
 
@@ -28,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-const net_1 = __importDefault(require("net"));
+import net from 'net';
 /**
  * Minimal OSC encoder and TCP client with size-prefixed framing.
  * This supports string and float arguments and maps booleans to 0/1 int32.
@@ -70,7 +63,7 @@ function oscArg(a) {
     // string fallback
     return oscString(String(a));
 }
-function encodeOSCMessage(address, args = []) {
+export function encodeOSCMessage(address, args = []) {
     const addr = oscString(address);
     const types = oscTypeTags(args);
     const argBufs = args.map(oscArg);
@@ -79,7 +72,7 @@ function encodeOSCMessage(address, args = []) {
 /**
  * Minimal OSC-over-TCP client using 32-bit BE length prefix framing
  */
-class OSCTcpClient {
+export class OSCTcpClient {
     constructor(host, port) {
         this.socket = null;
         this.connecting = false;
@@ -97,7 +90,7 @@ class OSCTcpClient {
         }
         this.connecting = true;
         await new Promise((resolve, reject) => {
-            const sock = net_1.default.createConnection({ host: this.host, port: this.port }, () => {
+            const sock = net.createConnection({ host: this.host, port: this.port }, () => {
                 this.socket = sock;
                 this.connecting = false;
                 resolve();
@@ -133,4 +126,3 @@ class OSCTcpClient {
         this.socket = null;
     }
 }
-exports.OSCTcpClient = OSCTcpClient;

@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 /*
 MIT License
 
@@ -24,10 +22,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-const psnClient_1 = require("./psnClient");
-const oscRouter_1 = require("./oscRouter");
-const config_1 = require("./config");
-const psnServer_1 = require("./psnServer");
+import { PSNClient } from './psnClient';
+import { OSCRouter } from './oscRouter';
+import { loadAppConfigFromCliAndEnv } from './config';
+import { PSNServer } from './psnServer';
 function printHelp() {
     console.log(`psnjs CLI
 
@@ -49,13 +47,13 @@ Flags:
 `);
 }
 async function cmdListen(argv) {
-    const cfg = (0, config_1.loadAppConfigFromCliAndEnv)(argv);
+    const cfg = loadAppConfigFromCliAndEnv(argv);
     if (cfg.parser?.debug)
         process.env.PSN_DEBUG = '1';
     if (cfg.parser?.flatten)
         process.env.PSN_FLATTEN = '1';
-    const client = new psnClient_1.PSNClient();
-    const router = cfg.osc ? new oscRouter_1.OSCRouter(cfg.osc) : null;
+    const client = new PSNClient();
+    const router = cfg.osc ? new OSCRouter(cfg.osc) : null;
     let trackerNames = {};
     client.on('ready', ({ device }) => console.log(`✅ Listening on ${device}`));
     client.on('error', e => console.error('❌', e));
@@ -77,8 +75,8 @@ async function cmdListen(argv) {
     client.start(cfg.iface, cfg.ttl);
 }
 async function cmdSendSim(argv) {
-    const cfg = (0, config_1.loadAppConfigFromCliAndEnv)(argv);
-    const server = new psnServer_1.PSNServer();
+    const cfg = loadAppConfigFromCliAndEnv(argv);
+    const server = new PSNServer();
     server.on('ready', info => {
         console.log(`🚀 PSN server ${info.addr}:${info.port} iface=${info.iface ?? 'auto'} ttl=${info.ttl}`);
         server.sendInfo('psnjs-sim', { 1: 'SimTracker' });

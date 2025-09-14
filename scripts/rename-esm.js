@@ -21,8 +21,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-export { PSNClient } from './psnClient';
-export { PSNServer } from './psnServer';
-export { OSCTcpClient } from './osc';
-export { OSCRouter } from './oscRouter';
-export * from './utils';
+const fs = require('fs');
+const path = require('path');
+
+function walk(dir, fn) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, entry.name);
+    if (entry.isDirectory()) walk(p, fn);
+    else fn(p);
+  }
+}
+
+const root = path.resolve(__dirname, '..', 'dist', 'esm');
+if (fs.existsSync(root)) {
+  walk(root, (p) => {
+    if (p.endsWith('.js')) {
+      const mjs = p.replace(/\.js$/, '.mjs');
+      fs.renameSync(p, mjs);
+    }
+  });
+}

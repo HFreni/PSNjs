@@ -180,6 +180,35 @@ OSCRouter API (src/oscRouter.ts)
   - Methods: `updateInfo(info)`, `routeData(data)`
   - Address templates support `{id}` and `{name}` placeholders
 
+Example: Route PSN to OSC
+
+```ts
+import { PSNClient, OSCRouter } from 'psnjs';
+
+const client = new PSNClient();
+
+// Configure OSC routing
+const router = new OSCRouter({
+  host: '127.0.0.1',
+  port: 9000,
+  addresses: {
+    pos:   { x: '/rig/{name}/x', y: '/rig/{name}/y', z: '/rig/{name}/z' },
+    speed: { x: '/rig/{id}/speed/x', y: '/rig/{id}/speed/y', z: '/rig/{id}/speed/z' },
+  },
+});
+
+client.on('info', (info) => router.updateInfo(info));
+client.on('data', (data) => {
+  router.routeData(data).catch(err => console.error('OSC route error:', err));
+});
+
+client.start(process.env.IFACE);
+```
+
+Notes:
+- `{name}` resolves from PSN INFO; falls back to `{id}` if unknown.
+- To send only position, either omit `speed/ori/accel` in `addresses`, or set env `OSC_ONLY_POS=1` when using the CLI.
+
 OSCTcpClient API (src/osc.ts)
 
 - Functions: `encodeOSCMessage(address, args)`

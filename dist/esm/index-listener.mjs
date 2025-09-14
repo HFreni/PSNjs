@@ -1,5 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 /*
 MIT License
 
@@ -24,12 +22,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 // src/index-listener.ts
-const psnClient_1 = require("./psnClient");
+import { PSNClient } from './psnClient';
 // Usage: ts-node src/index-listener.ts [iface]
 // - iface: optional IPv4 address to bind capture (e.g., "192.168.1.42").
 //          When omitted, the first non-loopback interface is used.
 console.log('🔊 PSN listener starting…');
-const client = new psnClient_1.PSNClient();
+const client = new PSNClient();
 const [, , IFACE_ARG] = process.argv;
 let trackerNames = {};
 client.on('ready', ({ device }) => console.log(`✅ Listening on ${device}`));

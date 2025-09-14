@@ -3,11 +3,22 @@
   "version": "1.0.0",
   "description": "",
   "main": "dist/lib.js",
+  "types": "dist/lib.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/lib.js",
+      "import": "./dist/esm/lib.mjs",
+      "types": "./dist/lib.d.ts"
+    },
+    "./cli": "./dist/cli.js"
+  },
   "bin": {
     "psnjs": "dist/cli.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build:cjs && npm run build:esm",
+    "build:cjs": "tsc -p tsconfig.json",
+    "build:esm": "tsc -p tsconfig.esm.json && node scripts/rename-esm.js",
     "start": "node dist/index.js",
     "dev": "npx ts-node src/index.ts",
     "listen": "npx ts-node src/index-listener.ts",
@@ -19,8 +30,13 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "commonjs",
+  "files": [
+    "dist",
+    "README.md",
+    "DEVELOPERS.md"
+  ],
   "dependencies": {
     "cap": "^0.2.1",
     "events": "^3.3.0",

@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install dependencies (skip native install scripts)
+        run: npm ci --ignore-scripts
+
+      - name: Build CJS and ESM bundles
+        run: npm run -s build
+
+      - name: Smoke test package exports
+        run: |
+          node -e "require('./dist/lib.js')"
+          node -e "import('./dist/esm/lib.mjs').then(()=>process.exit(0)).catch(e=>{console.error(e);process.exit(1);})"
+
+      - name: Create package tarball
+        run: |
+          npm pack --silent
+          echo "PKG_TGZ=$(ls -1 *.tgz)" >> $GITHUB_ENV
+
+      - name: Upload package tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: psnjs-tarball
+          path: ${{ env.PKG_TGZ }}
+
+      - name: Test install (CJS)
+        run: |
+          mkdir -p /tmp/smoke-cjs && cd /tmp/smoke-cjs
+          npm init -y --silent
+          npm install --ignore-scripts --silent "$GITHUB_WORKSPACE/${PKG_TGZ}"
+          node -e "const m=require('psnjs'); if(!m.PSNClient) { console.error('PSNClient missing'); process.exit(1);} console.log('CJS OK')"
+          node ./node_modules/.bin/psnjs --help || true
+
+      - name: Test install (ESM)
+        run: |
+          mkdir -p /tmp/smoke-esm && cd /tmp/smoke-esm
+          npm init -y --silent
+          npm install --ignore-scripts --silent "$GITHUB_WORKSPACE/${PKG_TGZ}"
+          node -e "import('psnjs').then(m=>{ if(!m.PSNClient){ throw new Error('PSNClient missing'); } console.log('ESM OK')}).catch(e=>{ console.error(e); process.exit(1); })"

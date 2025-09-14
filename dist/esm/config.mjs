@@ -1,10 +1,3 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.loadJsonConfig = loadJsonConfig;
-exports.loadAppConfigFromCliAndEnv = loadAppConfigFromCliAndEnv;
 /*
 MIT License
 
@@ -28,17 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-const fs_1 = __importDefault(require("fs"));
-const path_1 = __importDefault(require("path"));
-const arg_1 = __importDefault(require("arg"));
-const oscRouter_1 = require("./oscRouter");
-function loadJsonConfig(configPath) {
+import fs from 'fs';
+import path from 'path';
+import arg from 'arg';
+import { loadOscRouterConfigFromEnvAndCli } from './oscRouter';
+export function loadJsonConfig(configPath) {
     if (!configPath)
         return {};
-    const abs = path_1.default.resolve(process.cwd(), configPath);
-    if (!fs_1.default.existsSync(abs))
+    const abs = path.resolve(process.cwd(), configPath);
+    if (!fs.existsSync(abs))
         throw new Error(`Config file not found: ${abs}`);
-    const raw = fs_1.default.readFileSync(abs, 'utf8');
+    const raw = fs.readFileSync(abs, 'utf8');
     try {
         const json = JSON.parse(raw);
         return json;
@@ -47,8 +40,8 @@ function loadJsonConfig(configPath) {
         throw new Error(`Failed to parse JSON config at ${abs}: ${String(e)}`);
     }
 }
-function loadAppConfigFromCliAndEnv(argv, json) {
-    const a = (0, arg_1.default)({
+export function loadAppConfigFromCliAndEnv(argv, json) {
+    const a = arg({
         '--config': String,
         '--iface': String,
         '--ttl': Number,
@@ -84,7 +77,7 @@ function loadAppConfigFromCliAndEnv(argv, json) {
     };
     // Prefer CLI > JSON > env defaults
     const oscFromJson = fromFile?.osc;
-    const osc = (0, oscRouter_1.loadOscRouterConfigFromEnvAndCli)({ ...oscOverrides, ...(oscFromJson ? { enabled: true } : {}) }) || oscFromJson || null;
+    const osc = loadOscRouterConfigFromEnvAndCli({ ...oscOverrides, ...(oscFromJson ? { enabled: true } : {}) }) || oscFromJson || null;
     const iface = a['--iface'] ?? fromFile?.iface ?? undefined;
     const ttl = a['--ttl'] ?? fromFile?.ttl ?? undefined;
     const parser = {
