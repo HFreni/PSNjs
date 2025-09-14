@@ -68,4 +68,4 @@ jobs:
           mkdir -p /tmp/smoke-esm && cd /tmp/smoke-esm
           npm init -y --silent
           npm install --ignore-scripts --silent "$GITHUB_WORKSPACE/${PKG_TGZ}"
-          node -e "import('./node_modules/@harrisonfreni/psnjs').then(m=>{ if(!m.PSNClient){ throw new Error('PSNClient missing'); } console.log('ESM OK')}).catch(e=>{ console.error(e); process.exit(1); })"
+          node -e "import('@harrisonfreni/psnjs').then(m=>{ if(!m.PSNClient){ throw new Error('PSNClient missing'); } console.log('ESM OK')}).catch(e=>{ console.error(e); process.exit(1); })"

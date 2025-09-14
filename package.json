@@ -63,6 +63,8 @@
     "mcast:listen": "node src/mcast-test.js",
     "mcast:send": "node src/mcast-send.js",
     "send:sim": "npx ts-node src/psnTx.ts",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
@@ -74,6 +76,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.14.1",
+    "prettier": "^3.3.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   }

@@ -247,8 +247,8 @@ npm link @harrisonfreni/psnjs
 
 ```bash
 npm run build
-npm pack                   # produces psnjs-<version>.tgz
-npm install ./psnjs-*.tgz  # in your consuming project
+npm pack                                     # produces harrisonfreni-psnjs-<version>.tgz
+npm install ./harrisonfreni-psnjs-*.tgz      # in your consuming project
 ```
 
 - Exports and types:
