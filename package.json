@@ -15,8 +15,27 @@
   "bin": {
     "psnjs": "dist/cli.js"
   },
-  "keywords": [],
+  "keywords": [
+    "posistagenet",
+    "psn",
+    "osc",
+    "multicast",
+    "udp",
+    "tcp",
+    "tracking"
+  ],
   "author": "Harrison Freni",
+  "contributors": [
+    "Harrison Freni <hfreni@hfreni.com> (https://hfreni.com)"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hfreni/psnjs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hfreni/psnjs/issues"
+  },
+  "homepage": "https://github.com/hfreni/psnjs#readme",
   "license": "MIT",
   "type": "commonjs",
   "engines": {
@@ -29,6 +48,9 @@
     "DEVELOPERS.md",
     "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "npm run build:cjs && npm run build:esm",
     "build:cjs": "tsc -p tsconfig.json",
