@@ -12,6 +12,17 @@ Install / Build
   npm install
   npm run build
 
+Install from npm (recommended)
+
+```
+npm install psnjs
+```
+
+Native dependency note (PSN capture only):
+
+- If you plan to use PSNClient (packet capture), the optional native module `cap` requires libpcap/WinPcap/Npcap and a compiler toolchain for your OS.
+- If you only use OSC routing and not PSN capture, you can ignore the native dependency.
+
 Quick start
 
 - Listen to PSN on an interface (auto if omitted):
@@ -225,10 +236,17 @@ npm install ./psnjs-*.tgz  # in your consuming project
 - Exports and types:
   - `main` points to `dist/lib.js` (CommonJS)
   - `types` points to `dist/lib.d.ts`
-  - Dual exports:
-    - `require` → `dist/lib.js` (CJS)
-    - `import` → `dist/esm/lib.mjs` (ESM)
-    - `types` → `dist/lib.d.ts`
+- Dual exports:
+  - `require` → `dist/lib.js` (CJS)
+  - `import` → `dist/esm/lib.mjs` (ESM)
+  - `types` → `dist/lib.d.ts`
+
+Release to npm
+
+- Update version: `npm version <patch|minor|major>`
+- Ensure README/DEVELOPERS are up to date
+- Publish: `npm publish` (add `--access public` if using a scoped public package)
+- Tag and push your release commit
 
 **Data Flow**
 

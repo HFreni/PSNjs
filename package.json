@@ -1,7 +1,7 @@
 {
   "name": "psnjs",
   "version": "1.0.0",
-  "description": "",
+  "description": "PosiStageNet client/server with optional OSC routing and CLI.",
   "main": "dist/lib.js",
   "types": "dist/lib.d.ts",
   "exports": {
@@ -15,6 +15,20 @@
   "bin": {
     "psnjs": "dist/cli.js"
   },
+  "keywords": [],
+  "author": "Harrison Freni",
+  "license": "MIT",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "DEVELOPERS.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "npm run build:cjs && npm run build:esm",
     "build:cjs": "tsc -p tsconfig.json",
@@ -26,21 +40,15 @@
     "test:osc": "npx ts-node src/osc_integration_test.ts",
     "mcast:listen": "node src/mcast-test.js",
     "mcast:send": "node src/mcast-send.js",
-    "send:sim": "npx ts-node src/psnTx.ts"
+    "send:sim": "npx ts-node src/psnTx.ts",
+    "prepublishOnly": "npm run build"
   },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
-  "type": "commonjs",
-  "files": [
-    "dist",
-    "README.md",
-    "DEVELOPERS.md"
-  ],
   "dependencies": {
-    "cap": "^0.2.1",
     "events": "^3.3.0",
     "arg": "^4.1.3"
+  },
+  "optionalDependencies": {
+    "cap": "^0.2.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.1",
