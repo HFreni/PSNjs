@@ -1,5 +1,5 @@
 {
-  "name": "psnjs",
+  "name": "@harrisonfreni/psnjs",
   "version": "1.0.1",
   "description": "PosiStageNet client/server with optional OSC routing and CLI.",
   "main": "dist/lib.js",
