@@ -15,7 +15,7 @@ Install / Build
 Install from npm (recommended)
 
 ```
-npm install psnjs
+npm install @harrisonfreni/psnjs
 ```
 
 Native dependency note (PSN capture only):
