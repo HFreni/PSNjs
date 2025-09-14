@@ -196,8 +196,6 @@ Project links
 - Issues: https://github.com/hfreni/psnjs/issues
 - npm package: https://www.npmjs.com/package/@harrisonfreni/psnjs
 
-Note: Replace `REPLACE_ME_ORG/REPLACE_ME_REPO` with your GitHub org/repo once finalized.
-
 ## Install from GitHub Packages (optional)
 
 GitHub Packages for npm requires an authenticated registry. Ensure your package scope matches the repository owner (e.g., `@OWNER/psnjs`). Then configure an `.npmrc`:
