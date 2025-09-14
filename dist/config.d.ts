@@ -1,4 +1,3 @@
-import { OscRouterConfig } from './oscRouter';
 export type ParserConfig = {
     debug?: boolean;
     flatten?: boolean;
@@ -6,7 +5,6 @@ export type ParserConfig = {
 export type AppConfig = {
     iface?: string;
     ttl?: number;
-    osc?: OscRouterConfig | null;
     parser?: ParserConfig;
     dryRun?: boolean;
 };

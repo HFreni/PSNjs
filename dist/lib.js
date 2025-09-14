@@ -14,7 +14,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.OSCRouter = exports.OSCTcpClient = exports.PSNServer = exports.PSNClient = void 0;
+exports.PSNServer = exports.PSNClient = void 0;
 /*
 MIT License
 
@@ -42,8 +42,4 @@ var psnClient_1 = require("./psnClient");
 Object.defineProperty(exports, "PSNClient", { enumerable: true, get: function () { return psnClient_1.PSNClient; } });
 var psnServer_1 = require("./psnServer");
 Object.defineProperty(exports, "PSNServer", { enumerable: true, get: function () { return psnServer_1.PSNServer; } });
-var osc_1 = require("./osc");
-Object.defineProperty(exports, "OSCTcpClient", { enumerable: true, get: function () { return osc_1.OSCTcpClient; } });
-var oscRouter_1 = require("./oscRouter");
-Object.defineProperty(exports, "OSCRouter", { enumerable: true, get: function () { return oscRouter_1.OSCRouter; } });
 __exportStar(require("./utils"), exports);

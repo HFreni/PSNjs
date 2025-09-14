@@ -28,55 +28,13 @@ SOFTWARE.
 //   - ttl: unused in capture mode; reserved for symmetry with sender
 //   - --osc/--osc-host/--osc-port/--osc-addr-* flags override OSC env config
 import os from 'os';
-import arg from 'arg';
 import { PSNClient } from './psnClient.mjs';
-import { OSCRouter, loadOscRouterConfigFromEnvAndCli } from './oscRouter.mjs';
 // -------------------------------------------------------------
 // CLI args: [iface] [ttl]
 // -------------------------------------------------------------
 const [, , IFACE_ARG, TTL_ARG] = process.argv;
 const IFACE = IFACE_ARG || undefined; // e.g. "192.168.1.42"
 const TTL = TTL_ARG ? parseInt(TTL_ARG, 10) : 1; // default TTL = 1
-// -------------------------------------------------------------
-// CLI flags for OSC config (optional)
-//   Use --osc to enable and override host/port/addresses as needed.
-//   Env vars can also be used; see README.
-// -------------------------------------------------------------
-let oscRouter = null;
-try {
-    const a = arg({
-        '--osc': Boolean,
-        '--osc-host': String,
-        '--osc-port': Number,
-        '--osc-only-pos': Boolean,
-        '--osc-addr-x': String,
-        '--osc-addr-y': String,
-        '--osc-addr-z': String,
-        '--osc-addr-speed-x': String,
-        '--osc-addr-speed-y': String,
-        '--osc-addr-speed-z': String,
-        '--osc-addr-ori-x': String,
-        '--osc-addr-ori-y': String,
-        '--osc-addr-ori-z': String,
-        '--osc-addr-accel-x': String,
-        '--osc-addr-accel-y': String,
-        '--osc-addr-accel-z': String,
-    });
-    const oscCfg = loadOscRouterConfigFromEnvAndCli({
-        enabled: a['--osc'],
-        host: a['--osc-host'],
-        port: a['--osc-port'],
-        onlyPos: a['--osc-only-pos'],
-        pos: { x: a['--osc-addr-x'], y: a['--osc-addr-y'], z: a['--osc-addr-z'] },
-        speed: { x: a['--osc-addr-speed-x'], y: a['--osc-addr-speed-y'], z: a['--osc-addr-speed-z'] },
-        ori: { x: a['--osc-addr-ori-x'], y: a['--osc-addr-ori-y'], z: a['--osc-addr-ori-z'] },
-        accel: { x: a['--osc-addr-accel-x'], y: a['--osc-addr-accel-y'], z: a['--osc-addr-accel-z'] },
-    });
-    oscRouter = oscCfg ? new OSCRouter(oscCfg) : null;
-}
-catch {
-    // ignore CLI parse errors to keep backwards compatibility
-}
 // -------------------------------------------------------------
 // Show available NICs to pick from (for convenience when choosing iface)
 // -------------------------------------------------------------
@@ -114,7 +72,7 @@ client.on('info', (info) => {
     for (const [id, trk] of Object.entries(info.trackers)) {
         trackerNames[Number(id)] = trk.name;
     }
-    oscRouter?.updateInfo(info);
+    // names cached for pretty logging
 });
 // high‑level DATA
 client.on('data', (data) => {
@@ -128,11 +86,7 @@ client.on('data', (data) => {
         }
     }
     console.log();
-    if (oscRouter) {
-        oscRouter.routeData(data).catch(err => {
-            console.error('OSC route error:', err?.message || err);
-        });
-    }
+    // No OSC routing
 });
 // bind it
 client.start(IFACE, TTL);

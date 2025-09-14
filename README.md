@@ -1,4 +1,4 @@
-# PSNjs — PSN Client and Server (with optional OSC routing)
+# PSNjs — PSN Client and Server
 
 ![npm](https://img.shields.io/npm/v/@harrisonfreni/psnjs?logo=npm&color=cb3837)
 ![downloads](https://img.shields.io/npm/dm/@harrisonfreni/psnjs?logo=npm)
@@ -15,7 +15,6 @@
 PSNjs is a small TypeScript toolkit for PosiStageNet (PSN):
 - PSN Client: capture and parse INFO/DATA from the PSN multicast group.
 - PSN Server: simulate a PSN source and transmit INFO/DATA.
-- Optional OSC Routing: forward PSN axes to user‑defined OSC/TCP addresses.
 
 ## Install / Build
 
@@ -45,7 +44,7 @@ npm install @harrisonfreni/psnjs
 npm run listen -- [IFACE]
 ```
 
-- Main listener with optional OSC (see below for flags/env):
+- Main listener:
 
 ```bash
 npm run dev -- [IFACE] [TTL]
@@ -66,83 +65,12 @@ npx ts-node src/psnTx.ts 192.168.1.223 1
 - The sender multicasts to `236.10.10.10:56565` and logs each DATA frame.
 - CI-safe: set `PSN_DRYRUN=1` or pass `--dry-run` to avoid binding sockets (logs only).
 
-## OSC routing (optional)
+## Notes
 
-Enable routing via environment variables or CLI flags when running `src/index.ts`:
+- `PSN_DEBUG=1` logs chunk IDs/lengths and tracker parsing.
+- `PSN_FLATTEN=1` treats DATA tracker list as a linear stream (each POS starts a tracker).
 
-- `OSC_ENABLE_TCP=1` to enable routing
-- `OSC_HOST` TCP host (default `127.0.0.1`)
-- `OSC_PORT` TCP port (default `9000`)
-- `OSC_ADDR_X` OSC address for X axis (default `/psn/{id}/x`)
-- `OSC_ADDR_Y` OSC address for Y axis (default `/psn/{id}/y`)
-- `OSC_ADDR_Z` OSC address for Z axis (default `/psn/{id}/z`)
-
-Optional additional mappings (send only if set):
-
-- `OSC_ADDR_SPEED_X`, `OSC_ADDR_SPEED_Y`, `OSC_ADDR_SPEED_Z`
-- `OSC_ADDR_ORI_X`, `OSC_ADDR_ORI_Y`, `OSC_ADDR_ORI_Z`
-- `OSC_ADDR_ACCEL_X`, `OSC_ADDR_ACCEL_Y`, `OSC_ADDR_ACCEL_Z`
-
-Placeholders supported in addresses:
-
-- `{id}` → PSN tracker numeric ID
-- `{name}` → Tracker name (from PSN INFO), falls back to `{id}` when unknown
-
-Example usage (ts-node):
-
-```bash
-OSC_ENABLE_TCP=1 \
-OSC_HOST=127.0.0.1 \
-OSC_PORT=9000 \
-OSC_ADDR_X=/rig/{name}/x \
-OSC_ADDR_Y=/rig/{name}/y \
-OSC_ADDR_Z=/rig/{name}/z \
-OSC_ADDR_SPEED_X=/rig/{name}/speed/x \
-OSC_ADDR_ORI_X=/rig/{name}/ori/x \
-OSC_ADDR_ACCEL_X=/rig/{name}/accel/x \
-npx ts-node src/index.ts 192.168.1.223
-```
-
-NPM script example:
-
-```bash
-npm run osc -- [IFACE] [TTL]
-```
-
-Notes
-
-- OSC transport uses TCP with a 32-bit big-endian length prefix per packet.
-- Router sends separate messages per axis with a single float argument.
-- Debugging and parsing modes:
-  - `PSN_DEBUG=1` logs chunk IDs/lengths and tracker parsing.
-  - `PSN_FLATTEN=1` treats DATA tracker list as a linear stream (each POS starts a tracker).
-  - `OSC_ONLY_POS=1` disables speed/orientation/accel OSC messages.
-
-### CLI flags (override env)
-
-- `--osc` enable OSC routing
-- `--osc-host <host>`
-- `--osc-port <port>`
-- `--osc-addr-x|y|z <addr>` position addresses
-- `--osc-addr-speed-x|y|z <addr>` speed addresses
-- `--osc-addr-ori-x|y|z <addr>` orientation addresses
-- `--osc-addr-accel-x|y|z <addr>` acceleration addresses
-
-Example:
-
-```bash
-npx ts-node src/index.ts 192.168.1.223 --osc --osc-host 127.0.0.1 --osc-port 9000 --osc-addr-x /rig/{id}/x
-```
-
-## Integration test
-
-- Run a local OSC TCP integration test that spins a server and sends three messages:
-
-```bash
-npm run test-osc
-```
-
-If a port permission error appears, try a different port via `OSC_PORT` or run outside restricted environments.
+<!-- OSC integration tests removed -->
 
 ## Multicast test helpers
 
@@ -169,10 +97,9 @@ Notes:
 ## Architecture
 
 - PSNClient: Captures PSN multicast and parses INFO/DATA into typed payloads.
-- OSCRouter: Maps tracker axes to OSC addresses with `{id}`/`{name}` placeholders.
-- OSCTcpClient: Encodes OSC messages and sends over TCP with length-prefix framing.
+- PSNServer: Sends PSN INFO/DATA over multicast.
 - Index apps:
-  - `src/index.ts`: Main listener with optional OSC routing
+  - `src/index.ts`: Main listener
   - `src/index-listener.ts`: Minimal console listener (debugging)
 
 See DEVELOPERS.md for deeper protocol notes and parser details.
@@ -188,14 +115,7 @@ Example `psn.config.json`:
   "iface": "192.168.1.223",
   "ttl": 1,
   "parser": { "debug": false, "flatten": false },
-  "osc": {
-    "host": "127.0.0.1",
-    "port": 9000,
-    "addresses": {
-      "pos": { "x": "/psn/{name}/x", "y": "/psn/{name}/y", "z": "/psn/{name}/z" },
-      "speed": { "x": "/psn/{id}/speed/x" }
-    }
-  }
+  "parser": { "debug": true }
 }
 ```
 
@@ -217,17 +137,11 @@ psnjs send-sim --iface 192.168.1.223 --ttl 1
 Add this repo as a dependency (e.g., file:../psnjs or git URL). Then:
 
 ```ts
-import { PSNClient, OSCRouter } from 'psnjs';
+import { PSNClient } from '@harrisonfreni/psnjs';
 
 const client = new PSNClient();
-const router = new OSCRouter({
-  host: '127.0.0.1',
-  port: 9000,
-  addresses: { pos: { x: '/psn/{name}/x', y: '/psn/{name}/y', z: '/psn/{name}/z' } }
-});
-
-client.on('info', i => router.updateInfo(i));
-client.on('data', d => router.routeData(d));
+client.on('info', (i) => console.log('INFO', i.systemName, Object.keys(i.trackers)));
+client.on('data', (d) => console.log('DATA trackers', Object.keys(d.trackers)));
 client.start(process.env.IFACE);
 ```
 
@@ -278,28 +192,37 @@ npm install ./harrisonfreni-psnjs-*.tgz      # in your consuming project
  
 Project links
 
-- Repository: https://github.com/REPLACE_ME_ORG/REPLACE_ME_REPO
-- Issues: https://github.com/REPLACE_ME_ORG/REPLACE_ME_REPO/issues
+- Repository: https://github.com/hfreni/psnjs
+- Issues: https://github.com/hfreni/psnjs/issues
 - npm package: https://www.npmjs.com/package/@harrisonfreni/psnjs
 
 Note: Replace `REPLACE_ME_ORG/REPLACE_ME_REPO` with your GitHub org/repo once finalized.
 
+## Install from GitHub Packages (optional)
+
+GitHub Packages for npm requires an authenticated registry. Ensure your package scope matches the repository owner (e.g., `@OWNER/psnjs`). Then configure an `.npmrc`:
+
+```
+@OWNER:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=YOUR_GITHUB_PAT
+```
+
+- Replace `OWNER` with your GitHub username or org.
+- Use a GitHub Personal Access Token with `read:packages` (classic) or a Fine-grained PAT with Package read permission.
+
+Install:
+
+```bash
+npm install @OWNER/psnjs
+```
+
+CI/CD (publish): use the provided `publish-gh-packages` workflow. It uses `GITHUB_TOKEN` and enforces that `package.json` name starts with `@${{ github.repository_owner }}/`.
+
 **Data Flow**
 
-- UDP multicast → PSNClient → Info/Data events →
-  - Console logs with tracker IDs and names
-  - Optional: OSCRouter formats addresses → OSCTcpClient sends OSC/TCP
+- UDP multicast → PSNClient → Info/Data events → console logs (or your app logic)
 
 **Key Env Vars**
 
-- OSC_ENABLE_TCP=1: Enable OSC routing
-- OSC_HOST/OSC_PORT: OSC TCP destination (default 127.0.0.1:9000)
-- OSC_ADDR_X/Y/Z: Position OSC addresses (default `/psn/{id}/x|y|z`)
-- OSC_ADDR_SPEED_X/Y/Z: Speed addresses (optional)
-- OSC_ADDR_ORI_X/Y/Z: Orientation addresses (optional)
-- OSC_ADDR_ACCEL_X/Y/Z: Acceleration addresses (optional)
-- OSC_ONLY_POS=1: Suppress non-position OSC messages
 - PSN_DEBUG=1: Verbose chunk/parse logging
 - PSN_FLATTEN=1: Linear DATA parsing (each POS starts a tracker)
-
-CLI flags mirror most of these (see “CLI flags” above).

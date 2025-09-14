@@ -2,31 +2,29 @@
 
 ## Overview
 
-This codebase listens for PosiStageNet (PSN) multicast and can also transmit PSN. It optionally routes parsed axes to OSC/TCP.
+This codebase listens for PosiStageNet (PSN) multicast and can also transmit PSN.
 
 ## Modules at a glance
 
 - src/utils.ts — PSN pch32 helpers, chunk IDs, and shared types
 - src/psnClient.ts — Packet capture + PSN INFO/DATA parsers, emits events
 - src/psnServer.ts — Minimal PSN multicast sender (INFO/DATA)
-- src/oscRouter.ts — Maps PSN axes to OSC/TCP addresses
-- src/osc.ts — OSC encoder + 32‑bit BE length‑prefixed TCP client
-- src/index.ts — Main entry with optional OSC routing
+- src/index.ts — Main entry listener
 - src/index-listener.ts — Minimal console listener
 - src/mcast-*.js — Multicast test helpers (receive/send)
 
 ## CLI (src/cli.ts)
 
 - Subcommands:
-  - `listen` (default): start PSN listener with optional OSC routing
+- `listen` (default): start PSN listener
   - `send-sim`: start a simple PSN sender simulation
-- Flags: `--config`, `--iface`, `--ttl`, `--osc*`, `--debug`, `--flatten`
+- Flags: `--config`, `--iface`, `--ttl`, `--debug`, `--flatten`
 - Config is merged: CLI > JSON (if provided) > env defaults
 
 ## Config (src/config.ts)
 
 - Types and utilities to load/merge a JSON config and CLI/env into a single AppConfig.
-- JSON shape mirrors the fields used by the listener and OSC router.
+- JSON shape mirrors the fields used by the listener.
 
 ## PSN packet format (pch32)
 
@@ -82,15 +80,7 @@ This codebase listens for PosiStageNet (PSN) multicast and can also transmit PSN
 - Bounds checks: All loops guard against truncated or oversized chunks.
 - Flattened mode: Some emitters do not provide per‑tracker wrappers. Set `PSN_FLATTEN=1` to parse a linear subchunk stream, where each POS starts a tracker.
 
-## OSC routing
-
-- Config via env or CLI flags (see README). Defaults:
-  - Position: `/psn/{id}/x|y|z`
-  - Speed: `/psn/{id}/speed/x|y|z`
-  - Orientation: `/psn/{id}/ori/x|y|z`
-  - Acceleration: `/psn/{id}/accel/x|y|z`
-- `{id}` placeholder → tracker id (from DATA wrapper or POS ordering in flatten mode)
-- `{name}` placeholder → tracker name from INFO when available; falls back to `{id}`
+<!-- OSC routing removed: v1.0.4 -->
 
 ## Debugging
 
@@ -173,46 +163,7 @@ client.start(process.env.IFACE);
     server.start(/* ifaceIp? */ undefined, /* ttl? */ 1);
     ```
 
-## OSCRouter API (src/oscRouter.ts)
-
-- Class: `OSCRouter`
-  - Ctor config: `{ host, port, addresses: { pos, speed?, ori?, accel? } }`
-  - Methods: `updateInfo(info)`, `routeData(data)`
-  - Address templates support `{id}` and `{name}` placeholders
-
-Example: Route PSN to OSC
-
-```ts
-import { PSNClient, OSCRouter } from 'psnjs';
-
-const client = new PSNClient();
-
-// Configure OSC routing
-const router = new OSCRouter({
-  host: '127.0.0.1',
-  port: 9000,
-  addresses: {
-    pos:   { x: '/rig/{name}/x', y: '/rig/{name}/y', z: '/rig/{name}/z' },
-    speed: { x: '/rig/{id}/speed/x', y: '/rig/{id}/speed/y', z: '/rig/{id}/speed/z' },
-  },
-});
-
-client.on('info', (info) => router.updateInfo(info));
-client.on('data', (data) => {
-  router.routeData(data).catch(err => console.error('OSC route error:', err));
-});
-
-client.start(process.env.IFACE);
-```
-
-Notes:
-- `{name}` resolves from PSN INFO; falls back to `{id}` if unknown.
-- To send only position, either omit `speed/ori/accel` in `addresses`, or set env `OSC_ONLY_POS=1` when using the CLI.
-
-## OSCTcpClient API (src/osc.ts)
-
-- Functions: `encodeOSCMessage(address, args)`
-- Class: `OSCTcpClient(host, port)` with `send(address, args)` and `close()`
+<!-- OSC routing removed in v1.0.4 -->
 
 ## Type definitions (src/utils.ts)
 
@@ -221,7 +172,7 @@ Notes:
 
 ## Entrypoints
 
-- `src/index.ts`: lists NICs, starts PSNClient, logs INFO/DATA, optional OSC routing
+- `src/index.ts`: lists NICs, starts PSNClient, logs INFO/DATA
 - `src/index-listener.ts`: lean listener printing tracker names + fields
 
 ## Test helpers

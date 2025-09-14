@@ -23,6 +23,4 @@ SOFTWARE.
 */
 export { PSNClient } from './psnClient.mjs';
 export { PSNServer } from './psnServer.mjs';
-export { OSCTcpClient } from './osc.mjs';
-export { OSCRouter } from './oscRouter.mjs';
 export * from './utils.mjs';
