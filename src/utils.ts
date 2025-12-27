@@ -92,6 +92,10 @@ export const CHUNK = {
 /**
  * Build a pch32 chunk buffer.
  * If payload is an array, it is treated as sub-chunks and the hasSub bit is set.
+ *
+ * PSN spec format (matches Wireshark dissector):
+ *   - word A (16-bit LE): chunk ID
+ *   - word B (16-bit LE): (hasSub << 15) | length
  */
 export function buildChunk(id: number, payload: Buffer | Buffer[]): Buffer {
   let body: Buffer;
@@ -102,11 +106,11 @@ export function buildChunk(id: number, payload: Buffer | Buffer[]): Buffer {
   } else {
     body = payload;
   }
-  const len = body.length & 0xffff;
+  const len = body.length & 0x7fff;
   const header = Buffer.alloc(4);
-  const first16 = ((hasSub ? 1 : 0) << 15) | (id & 0x7fff);
-  header.writeUInt16LE(first16, 0);
-  header.writeUInt16LE(len, 2);
+  header.writeUInt16LE(id & 0xffff, 0);
+  const second16 = ((hasSub ? 1 : 0) << 15) | len;
+  header.writeUInt16LE(second16, 2);
   return Buffer.concat([header, body]);
 }
 
